@@ -17,12 +17,12 @@ import {
   increment
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Replace with your Firebase config
+// Replace with your Firebase config from the Console
 const firebaseConfig = {
   apiKey: "AIzaSyB_nWuZUQg7nIr58aIoUPLInyRCsLP8emA",
   authDomain: "banana-quiz-game.firebaseapp.com",
   projectId: "banana-quiz-game",
-  storageBucket: "banana-quiz-game.firebasestorage.app",
+  storageBucket: "banana-quiz-game.appspot.com", // canonical bucket
   messagingSenderId: "187840025221",
   appId: "1:187840025221:web:5b35040af52098c0fdcfec",
   measurementId: "G-XSBPQMSC61"
@@ -32,7 +32,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// helpers
+// ---- Auth helpers ----
 async function signupUser(email, password) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const userRef = doc(db, "users", cred.user.uid);
@@ -53,17 +53,23 @@ async function logoutUser() {
   return signOut(auth);
 }
 
-async function recordCorrectAnswer(uid) {
-  const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
+// ---- Stats helpers ----
+async function ensureUserDoc(uid) {
+  const ref = doc(db, "users", uid);
+  const snap = await getDoc(ref);
   if (!snap.exists()) {
-    await setDoc(userRef, {
+    await setDoc(ref, {
       email: auth.currentUser?.email || "",
       createdAt: serverTimestamp(),
       gamesPlayed: 0,
       correctAnswers: 0
     });
   }
+  return ref;
+}
+
+async function recordCorrectAnswer(uid) {
+  const userRef = await ensureUserDoc(uid);
   await updateDoc(userRef, {
     gamesPlayed: increment(1),
     correctAnswers: increment(1)
@@ -71,19 +77,8 @@ async function recordCorrectAnswer(uid) {
 }
 
 async function recordWrongAttempt(uid) {
-  const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) {
-    await setDoc(userRef, {
-      email: auth.currentUser?.email || "",
-      createdAt: serverTimestamp(),
-      gamesPlayed: 0,
-      correctAnswers: 0
-    });
-  }
-  await updateDoc(userRef, {
-    gamesPlayed: increment(1)
-  });
+  const userRef = await ensureUserDoc(uid);
+  await updateDoc(userRef, { gamesPlayed: increment(1) });
 }
 
 export {

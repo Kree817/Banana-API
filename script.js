@@ -4,6 +4,30 @@ import {
 } from "./firebase.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+/* ---------- UI helpers ---------- */
+function renderStats({ gamesPlayed = 0, correctAnswers = 0 }) {
+  const statsEl = document.getElementById("stats");
+  const wrong = Math.max(0, gamesPlayed - correctAnswers);
+
+  statsEl.classList.remove("hidden");
+  statsEl.innerHTML = `
+    <div class="grid grid-cols-3 gap-3 w-full max-w-[420px]">
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500">Total Games</div>
+        <div class="text-xl font-bold">${gamesPlayed}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500">Correct</div>
+        <div class="text-xl font-bold text-green-600">${correctAnswers}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-xs text-gray-500">Wrong</div>
+        <div class="text-xl font-bold text-red-500">${wrong}</div>
+      </div>
+    </div>
+  `;
+}
+
 class GameState {
   constructor() {
     this.imageUrl = "";
@@ -20,6 +44,7 @@ class GameState {
     this.feedbackEl.textContent = "";
     this.btnEl.innerText = "Submit";
     this.inputEl.value = "";
+    this.inputEl.focus();
   }
   setFeedback(text, color) {
     this.feedbackEl.textContent = text;
@@ -30,13 +55,17 @@ class GameState {
 const game = new GameState();
 let currentUser = null;
 
+/* ---------- Game flow ---------- */
 async function fetchQuestion() {
   try {
+    game.btnEl.disabled = true;
     const res = await fetch("https://marcconrad.com/uob/banana/api.php");
     const question = await res.json();
     game.updateState(question.question, question.solution);
   } catch (err) {
     game.setFeedback("Failed to load question.", "text-red-500");
+  } finally {
+    game.btnEl.disabled = false;
   }
 }
 
@@ -57,11 +86,17 @@ async function handleButtonClick() {
   }
 }
 
+/* ---------- Wiring ---------- */
 function initUIBindings() {
   document.getElementById("action-button").addEventListener("click", handleButtonClick);
   document.getElementById("logout-btn").addEventListener("click", async () => {
     await logoutUser();
     window.location.href = "login.html";
+  });
+
+  // Enter key to submit
+  game.inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleButtonClick();
   });
 }
 
@@ -69,7 +104,6 @@ onAuthStateChanged(auth, async (user) => {
   const loadingEl = document.getElementById("loading");
   const wrapperEl = document.getElementById("game-wrapper");
   const userEmailEl = document.getElementById("user-email");
-  const statsEl = document.getElementById("stats");
 
   if (!user) return (window.location.href = "login.html");
 
@@ -78,17 +112,12 @@ onAuthStateChanged(auth, async (user) => {
   loadingEl.classList.add("hidden");
   wrapperEl.classList.remove("hidden");
 
-  // Live stats (optional)
-  try {
-    const ref = doc(db, "users", user.uid);
-    onSnapshot(ref, (snap) => {
-      const d = snap.data();
-      if (d) {
-        statsEl.classList.remove("hidden");
-        statsEl.textContent = `Games played: ${d.gamesPlayed || 0} | Correct: ${d.correctAnswers || 0}`;
-      }
-    });
-  } catch {}
+  // Live stats subscription
+  const ref = doc(db, "users", user.uid);
+  onSnapshot(ref, (snap) => {
+    const d = snap.data() || { gamesPlayed: 0, correctAnswers: 0 };
+    renderStats(d);
+  });
 
   initUIBindings();
   fetchQuestion();
