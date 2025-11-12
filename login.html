@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banana Quiz | Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-yellow-50 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-white w-full max-w-sm rounded-xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-center text-yellow-600 mb-1">🍌 Banana Quiz</h1>
+    <p class="text-center text-gray-600 text-sm mb-5">Login to play</p>
+
+    <label class="text-xs text-gray-600 mb-1 block" for="email">Email</label>
+    <input id="email" type="email" placeholder="you@example.com" class="border w-full p-2 mb-3 rounded-lg focus:ring-2 focus:ring-yellow-400" />
+
+    <label class="text-xs text-gray-600 mb-1 block" for="password">Password</label>
+    <input id="password" type="password" placeholder="Your password" class="border w-full p-2 mb-4 rounded-lg focus:ring-2 focus:ring-yellow-400" />
+
+    <button id="loginBtn" class="w-full bg-yellow-500 text-white font-semibold py-2 rounded-lg hover:bg-yellow-600 transition mb-2">Login</button>
+    <p class="text-sm text-center mt-2"><a href="reset.html" class="text-blue-600 underline">Forgot Password?</a></p>
+
+    <p class="text-sm text-center mt-2">No account? <a href="signup.html" class="text-blue-600 underline">Sign up</a></p>
+
+    <p id="msg" class="text-center text-sm mt-4 min-h-[1.5rem]"></p> 
+  </div>
+
+  <script type="module">
+    import { loginUser, onAuthStateChanged, auth } from "./firebase.js";
+
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const msgEl = document.getElementById("msg");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function showMsg(text, ok=false){
+      msgEl.textContent = text || "";
+      msgEl.className = "text-center text-sm mt-4 " + (ok ? "text-green-600" : "text-red-500");
+    }
+
+    function valid(){
+      const e = emailEl.value.trim();
+      const p = passEl.value.trim();
+      if (!e || !p) return showMsg("Please enter email and password.");
+      if (!emailRegex.test(e)) return showMsg("Please enter a valid email address.");
+      if (p.length < 6) return showMsg("Password must be at least 6 characters.");
+      showMsg(""); return true;
+    }
+
+    function mapErr(err){
+      const m = {
+        "auth/invalid-email":"Invalid email format.",
+        "auth/user-not-found":"No account found with this email.",
+        "auth/wrong-password":"Incorrect password.",
+        "auth/too-many-requests":"Too many attempts. Try later.",
+        "auth/network-request-failed":"Network error. Check connection."
+      };
+      return m[err?.code] || err?.message || "Authentication error.";
+    }
+
+    onAuthStateChanged(auth, (user) => { if (user) window.location.href = "index.html"; });
+
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      if (!valid()) return;
+      try {
+        await loginUser(emailEl.value.trim(), passEl.value.trim());
+        window.location.href = "index.html";
+      } catch (e) { showMsg(mapErr(e)); }
+    });
+  </script>
+</body>
+</html>
