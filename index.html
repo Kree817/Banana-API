@@ -6,6 +6,8 @@
   <title>Banana Quiz Game</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
+
 <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
 
   <div id="game-wrapper" class="hidden flex flex-col items-center">
@@ -17,7 +19,7 @@
       </div>
     </div>
 
-    <!-- Live stats -->
+    <!-- Stats -->
     <div id="stats" class="text-sm text-gray-700 mb-3 hidden"></div>
 
     <div class="w-[400px] h-[300px] bg-white shadow-md rounded-md flex items-center justify-center mb-4">
@@ -31,7 +33,7 @@
     <button id="action-button" class="rounded-xl px-6 py-3 bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">Submit</button>
   </div>
 
-  <p id="loading" class="text-gray-500 text-sm">Checking session…</p>
+  <p id="loading" class="text-gray-500 text-sm">Loading…</p>
 
   <script type="module" src="./script.js"></script>
 </body>

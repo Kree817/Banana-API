@@ -28,17 +28,17 @@
     import { auth } from "./firebase.js";
     import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    const emailEl = document.getElementById("email");
-    const msgEl = document.getElementById("msg");
+    const emailElement = document.getElementById("email");
+    const msgElement = document.getElementById("msg");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function showMsg(text, ok=false){
-      msgEl.textContent = text || "";
-      msgEl.className = "text-center text-sm mt-4 " + (ok ? "text-green-600" : "text-red-500");
+      msgElement.textContent = text || "";
+      msgElement.className = "text-center text-sm mt-4 " + (ok ? "text-green-600" : "text-red-500");
     }
 
     document.getElementById("resetBtn").addEventListener("click", async () => {
-      const email = emailEl.value.trim();
+      const email = emailElement.value.trim();
       if (!email) return showMsg("Please enter your email.");
       if (!emailRegex.test(email)) return showMsg("Please enter a valid email address.");
       try {

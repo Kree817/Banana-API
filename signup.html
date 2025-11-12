@@ -30,18 +30,18 @@
   <script type="module">
     import { signupUser, onAuthStateChanged, auth } from "./firebase.js";
 
-    const emailEl = document.getElementById("email");
-    const passEl = document.getElementById("password");
-    const msgEl = document.getElementById("msg");
+    const emailElement = document.getElementById("email");
+    const passElement = document.getElementById("password");
+    const msgElement = document.getElementById("msg");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function showMsg(text, ok=false){
-      msgEl.textContent = text || "";
-      msgEl.className = "text-center text-sm mt-4 " + (ok ? "text-green-600" : "text-red-500");
+      msgElement.textContent = text || "";
+      msgElement.className = "text-center text-sm mt-4 " + (ok ? "text-green-600" : "text-red-500");
     }
     function valid(){
-      const e = emailEl.value.trim();
-      const p = passEl.value.trim();
+      const e = emailElement.value.trim();
+      const p = passElement.value.trim();
       if (!e || !p) return showMsg("Please enter email and password.");
       if (!emailRegex.test(e)) return showMsg("Please enter a valid email address.");
       if (p.length < 6) return showMsg("Password must be at least 6 characters.");
@@ -63,7 +63,7 @@
     document.getElementById("signupBtn").addEventListener("click", async () => {
       if (!valid()) return;
       try {
-        await signupUser(emailEl.value.trim(), passEl.value.trim());
+        await signupUser(emailElement.value.trim(), passElement.value.trim());
         window.location.href = "index.html";
       } catch (e) { showMsg(mapErr(e)); }
     });
